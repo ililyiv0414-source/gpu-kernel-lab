@@ -1,0 +1,93 @@
+cmake_minimum_required(VERSION 3.24)
+project(gpu_kernel_lab LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(ENABLE_CUDA "Build CUDA kernels and CUDA benchmark" OFF)
+
+add_library(kernel_lab_cpu
+    src/cpu/softmax.cpp
+    src/cpu/convolution.cpp
+)
+target_include_directories(kernel_lab_cpu PUBLIC include)
+
+if(MSVC)
+    target_compile_options(kernel_lab_cpu PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(kernel_lab_cpu PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(cpu_benchmark src/cpu/benchmark.cpp)
+target_link_libraries(cpu_benchmark PRIVATE kernel_lab_cpu)
+
+enable_testing()
+add_executable(kernel_lab_tests tests/test_cpu.cpp)
+target_link_libraries(kernel_lab_tests PRIVATE kernel_lab_cpu)
+add_test(NAME kernel_lab_tests COMMAND kernel_lab_tests)
+add_executable(kernel_lab_validation_tests tests/test_validation.cpp)
+target_link_libraries(kernel_lab_validation_tests PRIVATE kernel_lab_cpu)
+add_test(NAME kernel_lab_validation_tests COMMAND kernel_lab_validation_tests)
+set_tests_properties(kernel_lab_tests kernel_lab_validation_tests PROPERTIES LABELS cpu TIMEOUT 120)
+find_package(Python3 3.9 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME kernel_lab_runner_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_run_gpu.py")
+    set_tests_properties(kernel_lab_runner_tests PROPERTIES LABELS host TIMEOUT 120)
+    add_test(NAME softmax_comparison_validation_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_softmax_compare_results.py")
+    set_tests_properties(softmax_comparison_validation_tests PROPERTIES LABELS host TIMEOUT 120)
+    add_test(NAME workspace_result_validation_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_workspace_results.py")
+    set_tests_properties(workspace_result_validation_tests PROPERTIES LABELS host TIMEOUT 120)
+    add_test(NAME sync_result_validation_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_sync_results.py")
+    set_tests_properties(sync_result_validation_tests PROPERTIES LABELS host TIMEOUT 120)
+    add_test(NAME pytorch_result_validation_tests COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_pytorch_results.py")
+    set_tests_properties(pytorch_result_validation_tests PROPERTIES LABELS host TIMEOUT 120)
+endif()
+
+if(ENABLE_CUDA)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(NOT CMAKE_CUDA_COMPILER)
+        message(FATAL_ERROR "ENABLE_CUDA=ON, but no CUDA compiler was found")
+    endif()
+    enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+    add_library(kernel_lab_cuda
+        src/cuda/softmax_naive.cu
+        src/cuda/softmax_optimized.cu
+        src/cuda/softmax_workspace.cu
+        src/cuda/convolution_naive.cu
+    )
+    target_include_directories(kernel_lab_cuda PUBLIC include)
+    set_target_properties(kernel_lab_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    target_compile_options(kernel_lab_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)
+    target_compile_options(kernel_lab_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xptxas=-v>)
+    target_compile_options(kernel_lab_cuda PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--default-stream=legacy>)
+
+    add_executable(cuda_benchmark src/cuda/benchmark_cuda.cu)
+    target_link_libraries(cuda_benchmark PRIVATE kernel_lab_cpu kernel_lab_cuda)
+    add_executable(kernel_lab_cuda_tests tests/test_cuda.cu)
+    target_link_libraries(kernel_lab_cuda_tests PRIVATE kernel_lab_cuda)
+    add_test(NAME kernel_lab_cuda_tests COMMAND kernel_lab_cuda_tests)
+    set_tests_properties(kernel_lab_cuda_tests PROPERTIES LABELS cuda TIMEOUT 300)
+    add_executable(softmax_optimized_tests tests/test_softmax_optimized.cu)
+    target_link_libraries(softmax_optimized_tests PRIVATE kernel_lab_cuda)
+    add_test(NAME softmax_optimized_tests COMMAND softmax_optimized_tests)
+    set_tests_properties(softmax_optimized_tests PROPERTIES LABELS cuda TIMEOUT 300)
+    add_executable(softmax_compare src/cuda/softmax_compare.cu)
+    target_link_libraries(softmax_compare PRIVATE kernel_lab_cpu kernel_lab_cuda)
+    add_executable(softmax_workspace_tests tests/test_softmax_workspace.cu)
+    target_link_libraries(softmax_workspace_tests PRIVATE kernel_lab_cuda)
+    add_test(NAME softmax_workspace_tests COMMAND softmax_workspace_tests)
+    set_tests_properties(softmax_workspace_tests PROPERTIES LABELS cuda TIMEOUT 300)
+    add_executable(softmax_workspace_benchmark src/cuda/softmax_workspace_benchmark.cu)
+    target_link_libraries(softmax_workspace_benchmark PRIVATE kernel_lab_cpu kernel_lab_cuda)
+    add_executable(softmax_sync_tests tests/test_softmax_sync.cu)
+    target_link_libraries(softmax_sync_tests PRIVATE kernel_lab_cuda)
+    add_test(NAME softmax_sync_tests COMMAND softmax_sync_tests)
+    set_tests_properties(softmax_sync_tests PROPERTIES LABELS cuda TIMEOUT 300)
+    add_executable(softmax_sync_benchmark src/cuda/softmax_sync_benchmark.cu)
+    target_link_libraries(softmax_sync_benchmark PRIVATE kernel_lab_cpu kernel_lab_cuda)
+endif()

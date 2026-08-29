@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "benchmark_valid": true,
+  "profile": "none",
+  "sanitizer": "both",
+  "gpu_execution_verified": true,
+  "softmax_comparison_valid": true,
+  "summary_rows": 18,
+  "raw_rows": 198,
+  "comparison_summary_rows": 48,
+  "comparison_raw_rows": 1008
+}

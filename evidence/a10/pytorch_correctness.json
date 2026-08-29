@@ -1,0 +1,140 @@
+{
+  "status": "PASS",
+  "seed": 20260829,
+  "atol": 2e-06,
+  "rtol": 2e-05,
+  "cases": [
+    {
+      "case": "forward",
+      "shape": [
+        1,
+        128
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        7,
+        37
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        128
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        257
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        512
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        1024
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        2048
+      ],
+      "max_abs_error": 7.450580596923828e-09,
+      "status": "PASS"
+    },
+    {
+      "case": "forward",
+      "shape": [
+        1024,
+        4097
+      ],
+      "max_abs_error": 1.862645149230957e-09,
+      "status": "PASS"
+    },
+    {
+      "case": "non_default_stream",
+      "shape": [
+        64,
+        257
+      ],
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "autograd",
+      "shape": [
+        8,
+        257
+      ],
+      "max_abs_error": 3.725290298461914e-09,
+      "status": "PASS"
+    },
+    {
+      "case": "torch_library_opcheck",
+      "details": {
+        "test_schema": "SUCCESS",
+        "test_autograd_registration": "SUCCESS",
+        "test_faketensor": "SUCCESS",
+        "test_aot_dispatch_dynamic": "SUCCESS"
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "torch_compile_fullgraph_eager",
+      "max_abs_error": 0.0,
+      "status": "PASS"
+    },
+    {
+      "case": "reject_cpu",
+      "error": "Could not run 'kernel_lab_ext::softmax' with arguments from the 'CPU' backend. This could be because the operator doesn't exist for this backend, or was omitted during the selective/custom build process (if using custom build). If you are a Facebook employee using PyTorch on mobile, please visit htt",
+      "status": "PASS"
+    },
+    {
+      "case": "reject_float64",
+      "error": "kernel_lab_ext::softmax supports FP32 only",
+      "status": "PASS"
+    },
+    {
+      "case": "reject_rank1",
+      "error": "kernel_lab_ext::softmax requires a 2D [rows, cols] tensor",
+      "status": "PASS"
+    },
+    {
+      "case": "reject_noncontiguous",
+      "error": "kernel_lab_ext::softmax requires contiguous input",
+      "status": "PASS"
+    },
+    {
+      "case": "reject_empty",
+      "error": "kernel_lab_ext::softmax rejects empty dimensions",
+      "status": "PASS"
+    }
+  ],
+  "finite_input_precondition": true,
+  "note": "The custom kernel is benchmarked only on finite FP32 contiguous 2D CUDA tensors."
+}

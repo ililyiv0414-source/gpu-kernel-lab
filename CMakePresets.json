@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-cpu-release",
+      "displayName": "Windows MSVC x64 CPU Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/msvc-cpu-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENABLE_CUDA": "OFF"
+      }
+    },
+    {
+      "name": "windows-cpu-debug",
+      "inherits": "windows-cpu-release",
+      "displayName": "Windows MSVC x64 CPU Debug",
+      "binaryDir": "${sourceDir}/build/msvc-cpu-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-cpu-release", "configurePreset": "windows-cpu-release" },
+    { "name": "windows-cpu-debug", "configurePreset": "windows-cpu-debug" }
+  ],
+  "testPresets": [
+    { "name": "windows-cpu-release", "configurePreset": "windows-cpu-release", "output": { "outputOnFailure": true } },
+    { "name": "windows-cpu-debug", "configurePreset": "windows-cpu-debug", "output": { "outputOnFailure": true } }
+  ]
+}
